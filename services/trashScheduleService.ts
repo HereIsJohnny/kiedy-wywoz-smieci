@@ -45,35 +45,26 @@ export class TrashScheduleService {
     };
 
     const rows = tableContent.match(
-      /<tr><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><\/tr>/g
+      /<tr><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>/g
     );
+
+    console.log(rows);
 
     if (rows) {
       rows.forEach((row: string) => {
-        const dates = row.match(/\d{4}-\d{2}-\d{2}/g);
-        if (dates) {
-          dates.forEach((date: string, index: number) => {
-            if (date) {
-              switch (index) {
-                case 0:
-                  schedule.bio.push(date);
-                  break;
-                case 1:
-                  if (date !== "") schedule.glass.push(date);
-                  break;
-                case 2:
-                  if (date !== "") schedule.plastic.push(date);
-                  break;
-                case 3:
-                  if (date !== "") schedule.mixed.push(date);
-                  break;
-                case 4:
-                  if (date !== "") schedule.paper.push(date);
-                  break;
-              }
-            }
-          });
-        }
+        // Extract all cell contents, including d empty ones
+        const cells =
+          row.match(/<td>([^<]*)<\/td>/g)?.map((cell) => {
+            const dateMatch = cell.match(/\d{4}-\d{2}-\d{2}/);
+            return dateMatch ? dateMatch[0] : "";
+          }) || [];
+
+        // Add dates to their respective categories based on column position
+        if (cells[0]) schedule.bio.push(cells[0]);
+        if (cells[1]) schedule.glass.push(cells[1]);
+        if (cells[2]) schedule.plastic.push(cells[2]);
+        if (cells[3]) schedule.mixed.push(cells[3]);
+        if (cells[4]) schedule.paper.push(cells[4]);
       });
     }
 
