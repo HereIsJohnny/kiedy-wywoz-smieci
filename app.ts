@@ -8,8 +8,8 @@ async function main() {
 
   try {
     const schedule = await trashService.fetchSchedule();
-    console.log("Previous events deleted");
     await calendarService.deleteAllEvents();
+    console.log("Previous events deleted");
     await calendarService.createEvents(schedule);
     console.log("Calendar events created successfully");
   } catch (error) {
