@@ -44,18 +44,6 @@ export class CalendarService {
             q: eventSummary, // Search for exact event summary
           });
 
-          // Skip if an event with the same name already exists on this date
-          if (
-            existingEvents.data.items?.some(
-              (event) => event.summary === eventSummary
-            )
-          ) {
-            console.log(
-              `Event for ${category} on ${date} already exists, skipping`
-            );
-            continue;
-          }
-
           const event: calendar_v3.Schema$Event = {
             summary: eventSummary,
             start: { date },

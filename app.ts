@@ -1,9 +1,9 @@
 import { TrashScheduleService } from "./services/trashScheduleService";
 import { CalendarService } from "./services/calendarService";
-import { config } from "./config";
+import { configs, Config } from "./config";
 
-async function main() {
-  const trashService = new TrashScheduleService(config.trash);
+async function main(config: Config) {
+  const trashService = new TrashScheduleService(config.address);
   const calendarService = new CalendarService(config.calendar);
 
   try {
@@ -17,4 +17,6 @@ async function main() {
   }
 }
 
-main();
+configs.forEach((config) => {
+  main(config);
+});
