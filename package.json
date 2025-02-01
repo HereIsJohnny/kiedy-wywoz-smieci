@@ -7,11 +7,13 @@
         "@types/node-fetch": "^2.6.11",
         "bun-types": "latest",
         "jest": "^29.0.0",
+        "supabase": "^2.9.6",
         "ts-jest": "^29.0.0"
     },
     "dependencies": {
         "@google-cloud/functions-framework": "^3.0.0",
         "@googleapis/calendar": "^9.0.0",
+        "@supabase/supabase-js": "^2.48.1",
         "google-auth-library": "^9.0.0",
         "googleapis": "^128.0.0",
         "node-fetch": "^3.3.2"
