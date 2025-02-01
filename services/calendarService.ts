@@ -6,24 +6,61 @@ import * as path from "path";
 import { TrashSchedule } from "../types";
 
 interface CalendarConfig {
-  calendarId: string;
+  calendarId?: string;
+  calendarName?: string;
+}
+
+interface ShareCalendarOptions {
+  email: string;
+  role?: "none" | "freeBusyReader" | "reader" | "writer" | "owner";
+  sendNotification?: boolean;
 }
 
 export class CalendarService {
-  private readonly calendar: calendar_v3.Calendar;
-  private readonly calendarId: string;
+  private calendar: calendar_v3.Calendar;
+  private calendarId: string | null;
 
   constructor(config: CalendarConfig) {
     const __dirname = fileURLToPath(new URL(".", import.meta.url));
     const auth = new GoogleAuth({
       keyFile: path.join(__dirname, "../service-account.json"),
-      scopes: ["https://www.googleapis.com/auth/calendar.events"],
+      scopes: [
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/calendar.events",
+      ],
     });
     this.calendar = google.calendar({ version: "v3", auth });
-    this.calendarId = config.calendarId;
+    this.calendarId = config.calendarId || null;
+  }
+
+  async createCalendar(name: string): Promise<string> {
+    try {
+      const calendar = await this.calendar.calendars.insert({
+        requestBody: {
+          summary: name,
+          timeZone: "Europe/Warsaw",
+        },
+      });
+
+      if (!calendar.data.id) {
+        throw new Error("Failed to create calendar - no ID returned");
+      }
+
+      this.calendarId = calendar.data.id;
+      return calendar.data.id;
+    } catch (error) {
+      console.error("Error creating calendar:", error);
+      throw error;
+    }
   }
 
   async createEvents(schedule: TrashSchedule): Promise<void> {
+    if (!this.calendarId) {
+      throw new Error(
+        "Calendar ID not set. Please create or specify a calendar first."
+      );
+    }
+
     // Define color mapping for each category
     const categoryColors: Record<string, string> = {
       bio: "10", // Green
@@ -74,6 +111,12 @@ export class CalendarService {
   }
 
   async deleteAllEvents(): Promise<void> {
+    if (!this.calendarId) {
+      throw new Error(
+        "Calendar ID not set. Please create or specify a calendar first."
+      );
+    }
+
     try {
       // Get all events from the calendar
       const events = await this.calendar.events.list({
@@ -105,6 +148,77 @@ export class CalendarService {
       console.log("All events have been deleted");
     } catch (error) {
       console.error("Error deleting events:", error);
+      throw error;
+    }
+  }
+
+  setCalendarId(calendarId: string): void {
+    this.calendarId = calendarId;
+  }
+
+  getCalendarId(): string | null {
+    return this.calendarId;
+  }
+
+  async shareCalendar(options: ShareCalendarOptions): Promise<void> {
+    if (!this.calendarId) {
+      throw new Error(
+        "Calendar ID not set. Please create or specify a calendar first."
+      );
+    }
+
+    try {
+      const rule = {
+        role: options.role || "reader",
+        scope: {
+          type: "user",
+          value: options.email,
+        },
+      };
+
+      await this.calendar.acl.insert({
+        calendarId: this.calendarId,
+        requestBody: rule,
+        sendNotifications: options.sendNotification ?? true,
+      });
+
+      console.log(`Calendar shared with ${options.email} as ${rule.role}`);
+    } catch (error) {
+      console.error(`Error sharing calendar with ${options.email}:`, error);
+      throw error;
+    }
+  }
+
+  async removeCalendarAccess(email: string): Promise<void> {
+    if (!this.calendarId) {
+      throw new Error(
+        "Calendar ID not set. Please create or specify a calendar first."
+      );
+    }
+
+    try {
+      // First, find the rule ID for this email
+      const aclList = await this.calendar.acl.list({
+        calendarId: this.calendarId,
+      });
+
+      const rule = aclList.data.items?.find(
+        (item) => item.scope?.value === email
+      );
+
+      if (!rule || !rule.id) {
+        throw new Error(`No access rule found for ${email}`);
+      }
+
+      // Remove the access rule
+      await this.calendar.acl.delete({
+        calendarId: this.calendarId,
+        ruleId: rule.id,
+      });
+
+      console.log(`Calendar access removed for ${email}`);
+    } catch (error) {
+      console.error(`Error removing calendar access for ${email}:`, error);
       throw error;
     }
   }
