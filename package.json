@@ -3,16 +3,20 @@
     "module": "index.ts",
     "type": "module",
     "devDependencies": {
-        "bun-types": "latest",
-        "@types/node-fetch": "^2.6.11"
+        "@types/node-fetch": "^2.6.11",
+        "bun-types": "latest"
     },
     "dependencies": {
         "@googleapis/calendar": "^9.0.0",
+        "dotenv": "^16.4.1",
         "google-auth-library": "^9.0.0",
         "googleapis": "^129.0.0",
         "node-fetch": "^3.3.2"
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
+    },
+    "scripts": {
+        "start": "bun run app.ts"
     }
 }

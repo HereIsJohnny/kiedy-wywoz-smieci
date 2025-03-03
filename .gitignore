@@ -1,6 +1,5 @@
 # Credentials and configs
 service-account.json
-config.ts
 
 # Dependencies
 node_modules/
