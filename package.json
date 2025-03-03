@@ -1,7 +1,7 @@
 {
     "name": "trashes",
     "module": "index.ts",
-    "type": "module",
+    "type": "commonjs",
     "devDependencies": {
         "@types/node-fetch": "^2.6.11",
         "bun-types": "latest"
@@ -17,6 +17,7 @@
         "typescript": "^5.0.0"
     },
     "scripts": {
-        "start": "bun run app.ts"
+        "start": "npm run build && node ./dist/app.js",
+        "build": "tsc"
     }
 }

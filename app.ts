@@ -1,6 +1,6 @@
-import { TrashScheduleService } from "./services/trashScheduleService";
-import { CalendarService } from "./services/calendarService";
-import { config } from "./config";
+import { TrashScheduleService } from "./src/services/trashScheduleService";
+import { CalendarService } from "./src/services/calendarService";
+import { config } from "./src/config";
 
 async function main() {
   const trashService = new TrashScheduleService(config.trash);
