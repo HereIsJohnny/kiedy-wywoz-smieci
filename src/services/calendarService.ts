@@ -1,8 +1,8 @@
 import { calendar_v3 } from "@googleapis/calendar";
 import { GoogleAuth } from "google-auth-library";
 import { google } from "googleapis";
-import { fileURLToPath } from "url";
 import * as path from "path";
+import * as fs from "fs";
 import { TrashSchedule } from "../types";
 
 interface CalendarConfig {
@@ -14,13 +14,43 @@ export class CalendarService {
   private readonly calendarId: string;
 
   constructor(config: CalendarConfig) {
-    const __dirname = fileURLToPath(new URL(".", import.meta.url));
-    const auth = new GoogleAuth({
-      keyFile: path.join(__dirname, "../service-account.json"),
-      scopes: ["https://www.googleapis.com/auth/calendar.events"],
-    });
+    // Create auth based on environment
+    const auth = this.createAuth();
     this.calendar = google.calendar({ version: "v3", auth });
     this.calendarId = config.calendarId;
+  }
+
+  private createAuth() {
+    // Check if running in Google Cloud Functions
+    const isCloudFunction =
+      process.env.FUNCTION_TARGET || process.env.FUNCTION_NAME;
+
+    if (isCloudFunction) {
+      // In Cloud Functions, use the default credentials
+      console.log("Running in Cloud Functions, using default credentials");
+      return new GoogleAuth({
+        scopes: ["https://www.googleapis.com/auth/calendar.events"],
+      });
+    } else {
+      // For local development, use the service account file
+      console.log("Running locally, using service-account.json");
+
+      // Get the project root directory (2 levels up from the compiled services directory)
+      const projectRoot = path.resolve(__dirname, "../../../");
+      const serviceAccountPath = path.join(projectRoot, "service-account.json");
+
+      // Verify the file exists
+      if (!fs.existsSync(serviceAccountPath)) {
+        throw new Error(
+          `Service account file not found at: ${serviceAccountPath}`
+        );
+      }
+
+      return new GoogleAuth({
+        keyFile: serviceAccountPath,
+        scopes: ["https://www.googleapis.com/auth/calendar.events"],
+      });
+    }
   }
 
   async createEvents(schedule: TrashSchedule): Promise<void> {

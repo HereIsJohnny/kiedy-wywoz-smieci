@@ -1,20 +1,25 @@
 {
   "compilerOptions": {
     "lib": ["ESNext"],
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "composite": true,
+    "module": "commonjs",
+    "target": "es2020",
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "noEmit": false,
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "jsx": "preserve",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "types": ["bun-types"]
-  }
+    "allowJs": true
+  },
+  "include": [
+    "*.ts",
+    "services/*.ts",
+    "src/types/*.ts",
+    "src/config.ts",
+    "src/removeEvents.ts"
+  ],
+  "exclude": ["node_modules"]
 }

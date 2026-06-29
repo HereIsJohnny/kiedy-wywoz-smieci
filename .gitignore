@@ -1,6 +1,5 @@
 # Credentials and configs
 service-account.json
-config.ts
 
 # Dependencies
 node_modules/
@@ -21,3 +20,6 @@ build/
 # OS specific files
 .DS_Store
 Thumbs.db 
+
+# TypeScript build info
+*.tsbuildinfo

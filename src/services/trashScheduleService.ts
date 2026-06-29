@@ -36,6 +36,8 @@ export class TrashScheduleService {
     const jsonData = JSON.parse(response);
     const tableContent = jsonData.wiadomoscRWD;
 
+    console.log(tableContent);
+
     const schedule: TrashSchedule = {
       bio: [],
       glass: [],
@@ -44,27 +46,58 @@ export class TrashScheduleService {
       paper: [],
     };
 
+    // Extract the header row to determine column order
+    const headerMatch = tableContent.match(/<thead><tr>(.*?)<\/tr><\/thead>/s);
+    if (!headerMatch) {
+      console.error("Could not find table headers");
+      return schedule;
+    }
+
+    // Extract header cells and map them to waste types
+    const headerCells = headerMatch[1].match(/<th[^>]*>(.*?)<\/th>/g) || [];
+    const columnMap: Record<number, keyof TrashSchedule> = {};
+
+    headerCells.forEach((cell: string, index: number) => {
+      const headerText = cell
+        .replace(/<[^>]*>/g, "")
+        .trim()
+        .toLowerCase();
+
+      if (headerText.includes("bio")) {
+        columnMap[index] = "bio";
+      } else if (headerText.includes("papier")) {
+        columnMap[index] = "paper";
+      } else if (headerText.includes("zmieszane")) {
+        columnMap[index] = "mixed";
+      } else if (headerText.includes("szkło") || headerText.includes("szklo")) {
+        columnMap[index] = "glass";
+      } else if (headerText.includes("tworzywa")) {
+        columnMap[index] = "plastic";
+      }
+    });
+
+    console.log("Column mapping based on headers:", columnMap);
+
+    // Extract data rows
     const rows = tableContent.match(
       /<tr><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><td>([^<]*)<\/td><\/tr>/g
     );
 
-    console.log(rows);
-
     if (rows) {
       rows.forEach((row: string) => {
-        // Extract all cell contents, including d empty ones
+        // Extract all cell contents
         const cells =
           row.match(/<td>([^<]*)<\/td>/g)?.map((cell) => {
             const dateMatch = cell.match(/\d{4}-\d{2}-\d{2}/);
             return dateMatch ? dateMatch[0] : "";
           }) || [];
 
-        // Add dates to their respective categories based on column position
-        if (cells[0]) schedule.bio.push(cells[0]);
-        if (cells[1]) schedule.glass.push(cells[1]);
-        if (cells[2]) schedule.plastic.push(cells[2]);
-        if (cells[3]) schedule.mixed.push(cells[3]);
-        if (cells[4]) schedule.paper.push(cells[4]);
+        // Map each cell to its corresponding category based on the column mapping
+        cells.forEach((date, index) => {
+          if (date && columnMap[index]) {
+            schedule[columnMap[index]].push(date);
+          }
+        });
       });
     }
 
